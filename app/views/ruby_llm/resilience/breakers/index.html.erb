@@ -1,0 +1,42 @@
+<% content_for :head do %>
+  <meta http-equiv="refresh" content="10">
+<% end %>
+
+<h1>Circuit Breakers</h1>
+<p class="sub">
+  All reads on this page are pure — polling never consumes probe slots.
+  Auto-refreshes every 10s.
+</p>
+
+<% if @statuses.empty? %>
+  <p class="empty">
+    No breakers registered yet in this process. Breakers appear here after
+    their first use, or pass an explicit list with
+    <code>?services=api:a,api:b</code>.
+  </p>
+<% else %>
+  <table>
+    <tr>
+      <th>Service</th><th>State</th><th>Failures</th><th>Probe in</th>
+      <th>About</th><th></th>
+    </tr>
+    <% @statuses.each do |status| %>
+      <tr>
+        <td><code><%= status[:service] %></code></td>
+        <td><span class="pill <%= status[:state] %>"><%= status[:state].to_s.tr("_", "-") %></span></td>
+        <td><%= status[:failure_count] %></td>
+        <td><%= status[:seconds_until_probe] ? "#{status[:seconds_until_probe]}s" : "—" %></td>
+        <td class="meta">
+          <% if status[:metadata].any? %>
+            <%= status[:metadata].map { |k, v| "#{k}: #{v}" }.join(" · ") %>
+          <% end %>
+        </td>
+        <td>
+          <%= button_to "Reset", reset_breaker_path(id: status[:service]),
+                        method: :post,
+                        data: { turbo_confirm: "Force-close #{status[:service]}?" } %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<% end %>

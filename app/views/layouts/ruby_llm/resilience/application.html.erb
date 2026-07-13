@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circuit Breakers</title>
+  <%= csrf_meta_tags %>
+  <%= yield :head %>
+  <style>
+    :root { --bg:#fff; --ink:#1a2330; --muted:#6b7686; --line:#e5e9f0;
+            --ok:#16803c; --ok-bg:#e8f6ed; --warn:#92610c; --warn-bg:#fdf3df;
+            --bad:#b42318; --bad-bg:#fdeceb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0e1116; --ink:#e7ecf3; --muted:#8b96a5; --line:#232a33;
+              --ok-bg:#10301c; --warn-bg:#33270e; --bad-bg:#3a1512; }
+    }
+    body { margin:0; padding:2rem; background:var(--bg); color:var(--ink);
+           font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    h1 { font-size:18px; margin:0 0 4px; }
+    .sub { color:var(--muted); font-size:12px; margin:0 0 20px; }
+    table { border-collapse:collapse; width:100%; max-width:960px; }
+    th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+         color:var(--muted); padding:8px 12px; border-bottom:1px solid var(--line); }
+    td { padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+    code { font-size:13px; }
+    .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:600; }
+    .pill.closed    { color:var(--ok);   background:var(--ok-bg); }
+    .pill.half_open { color:var(--warn); background:var(--warn-bg); }
+    .pill.open      { color:var(--bad);  background:var(--bad-bg); }
+    .meta { color:var(--muted); font-size:12px; }
+    .notice { padding:8px 12px; margin:0 0 16px; background:var(--ok-bg); color:var(--ok);
+              border-radius:6px; max-width:960px; font-size:13px; }
+    form { display:inline; }
+    button { font:inherit; font-size:12px; padding:3px 10px; border:1px solid var(--line);
+             border-radius:6px; background:transparent; color:var(--ink); cursor:pointer; }
+    button:hover { border-color:var(--muted); }
+    .empty { color:var(--muted); padding:24px 12px; }
+  </style>
+</head>
+<body>
+  <% if notice.present? %><div class="notice"><%= notice %></div><% end %>
+  <%= yield %>
+</body>
+</html>
