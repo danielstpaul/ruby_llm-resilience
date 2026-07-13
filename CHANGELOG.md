@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-14
+
+- Breaker registry now uses shared constants instead of class-ivars, making
+  Breaker safely subclassable (apps can add service lists/aliases in a
+  subclass). Found while dogfooding — the shim subclass crashed on v0.3.0.
+
 ## [0.3.0] - 2026-07-13
 
 Fallback routing is now fully user-configurable:

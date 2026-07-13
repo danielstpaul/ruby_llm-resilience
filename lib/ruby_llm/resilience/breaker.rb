@@ -25,19 +25,22 @@ module RubyLLM
     class Breaker
       attr_reader :service
 
-      @registry = Set.new
-      @registry_mutex = Mutex.new
+      # Constants (not class-ivars) so subclasses share one registry —
+      # apps may subclass Breaker to add their own service lists/aliases.
+      REGISTRY = Set.new
+      REGISTRY_MUTEX = Mutex.new
+      private_constant :REGISTRY, :REGISTRY_MUTEX
 
       class << self
         def register(service)
-          @registry_mutex.synchronize { @registry.add(service) }
+          REGISTRY_MUTEX.synchronize { REGISTRY.add(service) }
         end
 
         # Per-process registry of breakers seen since boot. A cache-store
         # contract can't enumerate keys, so this (plus an explicit list) is
         # how dashboards discover services.
         def known_services
-          @registry_mutex.synchronize { @registry.to_a.sort }
+          REGISTRY_MUTEX.synchronize { REGISTRY.to_a.sort }
         end
 
         def dashboard_status(services: nil)
@@ -54,7 +57,7 @@ module RubyLLM
         end
 
         def reset_registry!
-          @registry_mutex.synchronize { @registry.clear }
+          REGISTRY_MUTEX.synchronize { REGISTRY.clear }
         end
       end
 

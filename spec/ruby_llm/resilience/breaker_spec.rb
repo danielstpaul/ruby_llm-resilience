@@ -219,3 +219,15 @@ RSpec.describe RubyLLM::Resilience::Breaker do
     end
   end
 end
+
+RSpec.describe "subclassing Breaker" do
+  it "shares the registry and works end-to-end from a subclass" do
+    subclass = Class.new(RubyLLM::Resilience::Breaker)
+    breaker = subclass.new("api:subclassed")
+
+    expect(RubyLLM::Resilience::Breaker.known_services).to include("api:subclassed")
+    RubyLLM::Resilience.config.failure_threshold.times { breaker.record_failure }
+    expect(breaker.state).to eq(:open)
+    expect(subclass.dashboard_status(services: %w[api:subclassed]).first[:state]).to eq(:open)
+  end
+end
