@@ -7,6 +7,12 @@ require "rails"
 require "action_controller/railtie"
 require "ruby_llm/resilience/engine"
 
+# Simulate real host apps: the ruby_llm gem's Railtie registers this
+# acronym, which changes "RubyLLM::...Controller".underscore from
+# "ruby_llm/..." to "rubyllm/..." — regression guard for the pinned
+# controller_path (template lookup broke in the first production adoption).
+ActiveSupport::Inflector.inflections(:en) { |inflect| inflect.acronym "RubyLLM" }
+
 module Dummy
   class Application < Rails::Application
     # Without an explicit root, Rails infers the GEM root — and then loads

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-14
+
+- Fix dashboard template lookup in apps using the ruby_llm gem: its Railtie
+  registers `acronym "RubyLLM"`, which changed the engine controller's
+  derived controller_path and broke view resolution. controller_path is now
+  pinned. (Second production-adoption catch.)
+
 ## [0.3.1] - 2026-07-14
 
 - Breaker registry now uses shared constants instead of class-ivars, making

@@ -3,6 +3,15 @@
 module RubyLLM
   module Resilience
     class BreakersController < ActionController::Base
+      # ruby_llm's Railtie registers `acronym "RubyLLM"`, which changes this
+      # controller's DERIVED controller_path to "rubyllm/resilience/breakers"
+      # in host apps — breaking template lookup (views ship under
+      # app/views/ruby_llm/...). Pin the path so lookup is deterministic
+      # regardless of the host's inflections.
+      def self.controller_path
+        "ruby_llm/resilience/breakers"
+      end
+
       protect_from_forgery with: :exception
       layout "ruby_llm/resilience/application"
 
