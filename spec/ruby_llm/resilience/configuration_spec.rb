@@ -53,3 +53,21 @@ RSpec.describe "shorthand require" do
     expect(::Resilience).to eq(RubyLLM::Resilience)
   end
 end
+
+RSpec.describe "Resilience.fallback_routes" do
+  it "groups model chains by breaker service" do
+    RubyLLM::Resilience.configure do |c|
+      c.provider_resolver = ->(_m) { "anthropic" }
+      c.fallback_models = {
+        "claude-sonnet-4-5" => "claude-opus-4-7",
+        "claude-sonnet-4-6" => [ "claude-opus-4-7", "claude-haiku-4-5" ]
+      }
+    end
+
+    routes = RubyLLM::Resilience.fallback_routes
+    expect(routes["api:anthropic:sonnet"]).to contain_exactly(
+      "claude-sonnet-4-5 → claude-opus-4-7",
+      "claude-sonnet-4-6 → claude-opus-4-7 → claude-haiku-4-5"
+    )
+  end
+end

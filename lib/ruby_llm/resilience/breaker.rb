@@ -44,14 +44,19 @@ module RubyLLM
         end
 
         def dashboard_status(services: nil)
+          config = Resilience.config
           (services || known_services).map do |service|
             breaker = new(service)
+            settings = config.settings_for(service)
             {
               service: service,
               state: breaker.state,
               failure_count: breaker.failure_count,
               seconds_until_probe: breaker.seconds_until_probe,
-              metadata: Resilience.config.metadata_for(service)
+              metadata: config.metadata_for(service),
+              failure_threshold: settings.failure_threshold,
+              cooldown_seconds: settings.cooldown_seconds,
+              overridden: config.services.key?(service)
             }
           end
         end

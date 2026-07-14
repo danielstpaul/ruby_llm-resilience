@@ -30,6 +30,13 @@ RubyLLM::Resilience.configure do |c|
     # Long cooldown: a steady red pill to look at.
     "api:google:flash"      => { cooldown_seconds: 600 }
   }
+  c.fallback_models = {
+    "claude-haiku-4-5"  => "claude-sonnet-4-6",
+    "claude-sonnet-4-6" => "claude-opus-4-7",
+    "gemini-3.5-flash"  => [ "claude-sonnet-4-6", "claude-opus-4-7" ]
+  }
+  c.provider_resolver = ->(m) { m.start_with?("claude") ? "anthropic" : m.start_with?("gemini") ? "gemini" : "unknown" }
+  c.on_error = ->(error, ctx) { puts "[demo on_error] #{error.class}: #{ctx.inspect}" }
   c.service_metadata = {
     "api:anthropic:sonnet"  => { description: "Coaching + generation", consumers: "Chat, Practice" },
     "api:openai:moderation" => { description: "Content moderation", consumers: "Message flow" },

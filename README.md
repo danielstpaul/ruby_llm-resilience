@@ -141,6 +141,21 @@ RubyLLM::Resilience.configure do |c|
 end
 ```
 
+## Telemetry recipes
+
+Three hooks, three different jobs — use all three:
+
+| Hook | Fires | Wire it to | Use it for |
+|---|---|---|---|
+| `on_error` | every **trip** (with the `BreakerTripped` exception) and store outages | `Rails.error.report(error, handled: true, context: ctx)` → AppSignal/Sentry as a **handled error** | Alerting. Trips are rare and high-signal; handled errors group by class and dedupe. |
+| `on_status` | every success (`:closed`, gauge-idempotent) and every trip (`:open`) | `Appsignal.set_gauge("circuit_breaker.state", state == :open ? 1 : 0, service:)` | State-over-time graphs; alert on a gauge stuck at 1. |
+| `on_fallback` | every **hop** a chain takes past a failed/skipped step | `Appsignal.increment_counter("llm.fallback", 1, from:, to:, error:)` | Volume/cost trends — how often you're degrading to a pricier model. Not an alert; a dashboard line. |
+
+Rule of thumb: **alert on the handled error, graph the gauge, trend the
+counter.** The counter isn't an alternative to error reporting — a trip is
+one event, but a tripped 5-minute window can be thousands of hops; you want
+the former in your inbox and the latter on a chart.
+
 ## The dashboard
 
 An optional mountable engine ships with the gem (the core stays
@@ -162,11 +177,15 @@ RubyLLM::Resilience.configure do |c|
 end
 ```
 
-One page: live state pills per service, failure counts, probe countdowns,
-your `service_metadata` descriptions, and reset buttons. Auto-refreshes —
-safely, because **all dashboard reads are pure**: polling never consumes
-half-open probe slots (that's why `allow_request?` and `open?` are separate
-methods).
+One page: live state pills per service, failures shown against their
+*effective* threshold (`1 / 5`), probe countdowns, per-service cooldowns
+(with override markers), **fallback routes** derived from your model map
+(`claude-haiku-4-5 → claude-sonnet-4-6`), your `service_metadata`
+descriptions, reset buttons, and a configuration panel showing your store,
+defaults, and which telemetry hooks are wired vs still no-ops.
+Auto-refreshes — safely, because **all dashboard reads are pure**: polling
+never consumes half-open probe slots (that's why `allow_request?` and
+`open?` are separate methods).
 
 Prefer your own admin panel? The data API is public:
 

@@ -11,21 +11,36 @@
 <% if @statuses.empty? %>
   <p class="empty">
     No breakers registered yet in this process. Breakers appear here after
-    their first use, or pass an explicit list with
-    <code>?services=api:a,api:b</code>.
+    their first use, configure <code>dashboard_services</code> for a static
+    fleet, or pass an explicit list with <code>?services=api:a,api:b</code>.
   </p>
 <% else %>
   <table>
     <tr>
       <th>Service</th><th>State</th><th>Failures</th><th>Probe in</th>
-      <th>About</th><th></th>
+      <th>Cooldown</th><th>Fallback routes</th><th>About</th><th></th>
     </tr>
     <% @statuses.each do |status| %>
       <tr>
         <td><code><%= status[:service] %></code></td>
         <td><span class="pill <%= status[:state] %>"><%= status[:state].to_s.tr("_", "-") %></span></td>
-        <td><%= status[:failure_count] %></td>
+        <td>
+          <%= status[:failure_count] %> / <%= status[:failure_threshold] %>
+        </td>
         <td><%= status[:seconds_until_probe] ? "#{status[:seconds_until_probe]}s" : "—" %></td>
+        <td>
+          <%= status[:cooldown_seconds] %>s<% if status[:overridden] %> <span class="meta" title="Per-service override via config.services">•</span><% end %>
+        </td>
+        <td class="routes">
+          <% routes = @fallback_routes[status[:service]] %>
+          <% if routes.present? %>
+            <% routes.each do |route| %>
+              <div><code><%= route %></code></div>
+            <% end %>
+          <% else %>
+            <span class="meta">— none configured</span>
+          <% end %>
+        </td>
         <td class="meta">
           <% if status[:metadata].any? %>
             <%= status[:metadata].map { |k, v| "#{k}: #{v}" }.join(" · ") %>
@@ -40,3 +55,25 @@
     <% end %>
   </table>
 <% end %>
+
+<div class="panel">
+  <h2>Configuration</h2>
+  <table class="config">
+    <tr><th>Store</th><td><code><%= @config.cache_store.class.name %></code></td></tr>
+    <tr><th>Defaults</th><td><%= @config.failure_threshold %> failures / <%= @config.cooldown_seconds %>s cooldown / <%= @config.failures_window_seconds %>s window</td></tr>
+    <tr>
+      <th>Telemetry hooks</th>
+      <td>
+        <code>on_error</code> <span class="hook <%= hook_status(@config.on_error) %>"><%= hook_status(@config.on_error) %></span> ·
+        <code>on_status</code> <span class="hook <%= hook_status(@config.on_status) %>"><%= hook_status(@config.on_status) %></span> ·
+        <code>on_fallback</code> <span class="hook <%= hook_status(@config.on_fallback) %>"><%= hook_status(@config.on_fallback) %></span>
+      </td>
+    </tr>
+    <tr><th>Fallback map</th><td><%= @config.fallback_models.size %> model route<%= "s" unless @config.fallback_models.size == 1 %> · <%= @config.services.size %> per-service override<%= "s" unless @config.services.size == 1 %></td></tr>
+  </table>
+  <p class="meta">
+    Trips fire <code>on_error</code> (wire to your error tracker as a handled
+    error), state changes fire the <code>on_status</code> gauge, fallback hops
+    fire <code>on_fallback</code> — see the README's telemetry recipes.
+  </p>
+</div>

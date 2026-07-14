@@ -62,6 +62,18 @@ module RubyLLM
       def service_for(model_name)
         config.service_namer.call(model_name)
       end
+
+      # Fallback routing grouped by breaker service, for dashboards:
+      #   { "api:anthropic:haiku" => ["claude-haiku-4-5 → claude-sonnet-4-6"], ... }
+      # A service can carry several routes when multiple models map into the
+      # same tier breaker.
+      def fallback_routes
+        config.fallback_models.keys.each_with_object(Hash.new { |h, k| h[k] = [] }) do |model, routes|
+          service = service_for(model)
+          chain = [ model, *config.fallbacks_for(model) ]
+          routes[service] << chain.join(" → ")
+        end
+      end
     end
   end
 end

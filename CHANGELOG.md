@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-14
+
+Dashboard fleshed out:
+
+- **Fallback routes column** — model chains from `fallback_models`, grouped
+  by breaker service via the namer (`Resilience.fallback_routes` is public
+  API for custom dashboards)
+- Failures shown against the effective per-service threshold (`1 / 5`);
+  cooldown column with per-service override markers
+- **Configuration panel** — store, defaults, fallback-map size, and whether
+  each telemetry hook (`on_error`/`on_status`/`on_fallback`) is configured
+  or still a no-op
+- `Breaker.dashboard_status` rows now include `failure_threshold`,
+  `cooldown_seconds`, `overridden`
+- README: telemetry recipes (alert on the handled error, graph the gauge,
+  trend the counter)
+
 ## [0.3.3] - 2026-07-14
 
 - New `config.dashboard_services`: default service list for the engine

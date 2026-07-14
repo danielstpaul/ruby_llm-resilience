@@ -23,6 +23,15 @@ module RubyLLM
         services = params[:services].presence&.split(",") ||
                    Resilience.config.dashboard_services
         @statuses = Breaker.dashboard_status(services: services)
+        @fallback_routes = Resilience.fallback_routes
+        @config = Resilience.config
+      end
+
+      # "configured" when the app replaced the default no-op lambda (defaults
+      # are all defined in configuration.rb — source_location tells them apart).
+      helper_method def hook_status(hook)
+        file = hook.respond_to?(:source_location) ? hook.source_location&.first : nil
+        file&.end_with?("configuration.rb") ? "default" : "configured"
       end
 
       def reset

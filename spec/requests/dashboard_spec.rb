@@ -81,3 +81,39 @@ RSpec.describe "dashboard_services config", type: :request do
     expect(response.body).to include("api:static:one").and include("api:static:two")
   end
 end
+
+RSpec.describe "fleshed-out dashboard", type: :request do
+  before do
+    RubyLLM::Resilience.configure do |c|
+      c.dashboard_auth = ->(_controller) {}
+      c.provider_resolver = ->(m) { m.start_with?("claude") ? "anthropic" : "unknown" }
+      c.fallback_models = {
+        "claude-haiku-4-5"  => "claude-sonnet-4-6",
+        "claude-sonnet-4-6" => [ "claude-opus-4-7", "claude-haiku-4-5" ]
+      }
+      c.services = { "api:anthropic:haiku" => { failure_threshold: 2, cooldown_seconds: 30 } }
+      c.on_error = ->(_e, _c) { :wired }
+    end
+    RubyLLM::Resilience::Breaker.new("api:anthropic:haiku")
+    RubyLLM::Resilience::Breaker.new("api:anthropic:sonnet")
+  end
+
+  it "shows fallback routes derived from the model map (multi-hop included)" do
+    get "/resilience"
+    expect(response.body).to include("claude-haiku-4-5 → claude-sonnet-4-6")
+    expect(response.body).to include("claude-sonnet-4-6 → claude-opus-4-7 → claude-haiku-4-5")
+  end
+
+  it "shows failures against the effective per-service threshold and cooldown" do
+    get "/resilience"
+    expect(response.body).to include("0 / 2")   # overridden threshold
+    expect(response.body).to include("30s")     # overridden cooldown
+    expect(response.body).to include("0 / 5")   # global default on the other row
+  end
+
+  it "shows which telemetry hooks are configured vs default" do
+    get "/resilience"
+    expect(response.body).to match(%r{on_error</code> <span class="hook configured})
+    expect(response.body).to match(%r{on_status</code> <span class="hook default})
+  end
+end
