@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-07-14
+
+- New `config.dashboard_services`: default service list for the engine
+  dashboard (nil = per-process registry). Apps with a known static fleet
+  get a complete dashboard from the first request. (Third
+  production-adoption catch.)
+
 ## [0.3.2] - 2026-07-14
 
 - Fix dashboard template lookup in apps using the ruby_llm gem: its Railtie

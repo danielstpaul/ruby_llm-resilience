@@ -20,7 +20,8 @@ module RubyLLM
       before_action :authenticate_dashboard!
 
       def index
-        services = params[:services].presence&.split(",")
+        services = params[:services].presence&.split(",") ||
+                   Resilience.config.dashboard_services
         @statuses = Breaker.dashboard_status(services: services)
       end
 

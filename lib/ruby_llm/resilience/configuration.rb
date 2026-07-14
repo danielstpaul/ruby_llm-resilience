@@ -35,7 +35,7 @@ module RubyLLM
                     :on_error, :on_status, :on_fallback,
                     :provider_resolver, :service_namer,
                     :trippable_errors, :fallback_errors,
-                    :services, :service_metadata, :dashboard_auth
+                    :services, :service_metadata, :dashboard_auth, :dashboard_services
 
       # Normalized fallback hops for a model: always an Array (possibly empty).
       def fallbacks_for(model_name)
@@ -87,6 +87,13 @@ module RubyLLM
         #   c.service_metadata = { "api:anthropic:sonnet" =>
         #     { description: "Coaching + generation", consumers: "Chat, Practice" } }
         @service_metadata = {}
+
+        # Default service list for the dashboard engine. nil = the
+        # per-process registry (services seen since boot). Apps with a known
+        # static fleet should set this so the dashboard is complete from the
+        # first request:
+        #   c.dashboard_services = %w[api:anthropic:sonnet api:openai:gpt ...]
+        @dashboard_services = nil
 
         # Auth hook for the mountable dashboard (see resilience/engine).
         # DENY BY DEFAULT: mounting without configuring this renders 404 on

@@ -70,3 +70,14 @@ RSpec.describe "dashboard engine", type: :request do
     end
   end
 end
+
+RSpec.describe "dashboard_services config", type: :request do
+  it "uses the configured static list when no params given" do
+    RubyLLM::Resilience.configure do |c|
+      c.dashboard_auth = ->(_controller) {}
+      c.dashboard_services = %w[api:static:one api:static:two]
+    end
+    get "/resilience"
+    expect(response.body).to include("api:static:one").and include("api:static:two")
+  end
+end
