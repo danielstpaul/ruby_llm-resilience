@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-14
+
+- Dashboard table: click-to-sort columns (text/numeric aware) and a
+  service/state filter box — dependency-free vanilla JS, with sort/filter
+  state persisted in localStorage so it survives the 10s auto-refresh.
+
 ## [0.4.0] - 2026-07-14
 
 Dashboard fleshed out:

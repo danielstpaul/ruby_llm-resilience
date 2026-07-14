@@ -15,20 +15,26 @@
     fleet, or pass an explicit list with <code>?services=api:a,api:b</code>.
   </p>
 <% else %>
-  <table>
-    <tr>
-      <th>Service</th><th>State</th><th>Failures</th><th>Probe in</th>
-      <th>Cooldown</th><th>Fallback routes</th><th>About</th><th></th>
-    </tr>
-    <% @statuses.each do |status| %>
+  <input id="breaker-filter" type="search" placeholder="Filter by service or state…"
+         autocomplete="off" aria-label="Filter breakers">
+  <table id="breakers" data-sortable>
+    <thead>
       <tr>
+        <th data-sort="text">Service</th><th data-sort="text">State</th>
+        <th data-sort="num">Failures</th><th data-sort="num">Probe in</th>
+        <th data-sort="num">Cooldown</th><th>Fallback routes</th><th>About</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @statuses.each do |status| %>
+      <tr data-filter="<%= status[:service] %> <%= status[:state] %>">
         <td><code><%= status[:service] %></code></td>
-        <td><span class="pill <%= status[:state] %>"><%= status[:state].to_s.tr("_", "-") %></span></td>
-        <td>
+        <td data-value="<%= status[:state] %>"><span class="pill <%= status[:state] %>"><%= status[:state].to_s.tr("_", "-") %></span></td>
+        <td data-value="<%= status[:failure_count] %>">
           <%= status[:failure_count] %> / <%= status[:failure_threshold] %>
         </td>
-        <td><%= status[:seconds_until_probe] ? "#{status[:seconds_until_probe]}s" : "—" %></td>
-        <td>
+        <td data-value="<%= status[:seconds_until_probe] || -1 %>"><%= status[:seconds_until_probe] ? "#{status[:seconds_until_probe]}s" : "—" %></td>
+        <td data-value="<%= status[:cooldown_seconds] %>">
           <%= status[:cooldown_seconds] %>s<% if status[:overridden] %> <span class="meta" title="Per-service override via config.services">•</span><% end %>
         </td>
         <td class="routes">
@@ -53,7 +59,72 @@
         </td>
       </tr>
     <% end %>
+    </tbody>
   </table>
+
+  <script>
+    // Sort + filter, no dependencies. State persists in localStorage so it
+    // survives the 10s auto-refresh.
+    (function () {
+      var table = document.getElementById("breakers");
+      var filter = document.getElementById("breaker-filter");
+      if (!table || !filter) return;
+      var KEY = "rlr-dashboard-v1";
+      var state = {};
+      try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+
+      function rows() { return Array.prototype.slice.call(table.tBodies[0].rows); }
+
+      function applyFilter() {
+        var q = filter.value.trim().toLowerCase();
+        rows().forEach(function (row) {
+          var hay = (row.getAttribute("data-filter") || "").toLowerCase();
+          row.style.display = !q || hay.indexOf(q) !== -1 ? "" : "none";
+        });
+      }
+
+      function cellValue(row, idx, kind) {
+        var cell = row.cells[idx];
+        var v = cell.getAttribute("data-value");
+        if (v === null) v = cell.textContent.trim();
+        return kind === "num" ? parseFloat(v) : v.toLowerCase();
+      }
+
+      function applySort() {
+        if (state.col == null) return;
+        var ths = table.tHead.rows[0].cells;
+        var kind = ths[state.col] && ths[state.col].getAttribute("data-sort");
+        if (!kind) return;
+        var dir = state.dir === "desc" ? -1 : 1;
+        rows().sort(function (a, b) {
+          var av = cellValue(a, state.col, kind), bv = cellValue(b, state.col, kind);
+          return av < bv ? -dir : av > bv ? dir : 0;
+        }).forEach(function (row) { table.tBodies[0].appendChild(row); });
+        Array.prototype.forEach.call(ths, function (th, i) {
+          th.classList.toggle("sorted-asc", i === state.col && dir === 1);
+          th.classList.toggle("sorted-desc", i === state.col && dir === -1);
+        });
+      }
+
+      function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+      Array.prototype.forEach.call(table.tHead.rows[0].cells, function (th, i) {
+        if (!th.getAttribute("data-sort")) return;
+        th.addEventListener("click", function () {
+          state.dir = state.col === i && state.dir !== "desc" ? "desc" : "asc";
+          state.col = i;
+          save(); applySort();
+        });
+      });
+      filter.addEventListener("input", function () {
+        state.q = filter.value;
+        save(); applyFilter();
+      });
+
+      if (state.q) filter.value = state.q;
+      applyFilter(); applySort();
+    })();
+  </script>
 <% end %>
 
 <div class="panel">

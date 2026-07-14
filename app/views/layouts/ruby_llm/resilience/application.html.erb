@@ -43,6 +43,14 @@
     .hook { display:inline-block; padding:1px 7px; border-radius:999px; font-size:11px; }
     .hook.configured { color:var(--ok); background:var(--ok-bg); }
     .hook.default { color:var(--muted); background:var(--line); }
+    #breaker-filter { display:block; margin:0 0 12px; padding:6px 10px; width:280px;
+                      font:inherit; font-size:13px; color:var(--ink); background:var(--bg);
+                      border:1px solid var(--line); border-radius:6px; }
+    #breaker-filter:focus { outline:none; border-color:var(--muted); }
+    th[data-sort] { cursor:pointer; user-select:none; }
+    th[data-sort]:hover { color:var(--ink); }
+    th.sorted-asc::after  { content:" ▲"; font-size:9px; }
+    th.sorted-desc::after { content:" ▼"; font-size:9px; }
   </style>
 </head>
 <body>

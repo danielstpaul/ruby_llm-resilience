@@ -117,3 +117,17 @@ RSpec.describe "fleshed-out dashboard", type: :request do
     expect(response.body).to match(%r{on_status</code> <span class="hook default})
   end
 end
+
+RSpec.describe "dashboard sort/filter markup", type: :request do
+  it "renders the filter input, sortable headers, and per-row filter/sort data" do
+    RubyLLM::Resilience.configure do |c|
+      c.dashboard_auth = ->(_controller) {}
+      c.dashboard_services = %w[api:one api:two]
+    end
+    get "/resilience"
+    expect(response.body).to include('id="breaker-filter"')
+    expect(response.body).to include('data-sort="num"')
+    expect(response.body).to include('data-filter="api:one closed"')
+    expect(response.body).to include("localStorage") # state survives auto-refresh
+  end
+end
