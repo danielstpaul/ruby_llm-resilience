@@ -1,0 +1,29 @@
+name: Release
+
+# Publishes to RubyGems via Trusted Publishing (OIDC — no API key stored).
+# One-time setup on rubygems.org (gem owner, in the browser):
+#   Profile → Trusted publishers → add publisher for gem "ruby_llm-resilience"
+#   with repository danielstpaul/ruby_llm-resilience and workflow release.yml.
+# Then: create a GitHub Release (or run this manually) and it ships.
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - run: bundle exec rspec
+      - uses: rubygems/release-gem@v1

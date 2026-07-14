@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-14
+
+Rails DX:
+
+- `rails g resilience:install` — writes a fully-commented initializer
+  covering every configuration seam
+- The dashboard engine now loads automatically under Rails (no Gemfile
+  `require:` needed; mounting stays opt-in). Non-Rails usage unchanged —
+  the core still has zero dependencies
+- RubyGems Trusted Publishing release workflow (.github/workflows/release.yml)
+
 ## [0.5.0] - 2026-07-14
 
 - Dashboard table: click-to-sort columns (text/numeric aware) and a

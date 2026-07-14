@@ -8,6 +8,10 @@ require_relative "resilience/configuration"
 require_relative "resilience/breaker"
 require_relative "resilience/chain"
 
+# Under Rails the dashboard engine loads automatically (mounting it stays
+# opt-in via routes). Outside Rails the core works alone — zero dependencies.
+require_relative "resilience/engine" if defined?(::Rails::Engine)
+
 module RubyLLM
   # Circuit breakers and fallback chains for LLM apps.
   #

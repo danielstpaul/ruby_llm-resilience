@@ -35,6 +35,12 @@ outage.
 gem "ruby_llm-resilience"
 ```
 
+```bash
+rails g resilience:install   # writes a fully-commented initializer
+```
+
+Outside Rails, or by hand:
+
 ```ruby
 # config/initializers/resilience.rb
 RubyLLM::Resilience.configure do |c|
